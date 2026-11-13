@@ -14,13 +14,13 @@ Last updated: 2026-11-13
 - [x] World-scoped knowledge ledger for claims, evidence, source independence, and review records.
 - [x] Conservative claim evaluation: proposed, corroborated, contested, or refuted.
 - [x] Cognitive Resource Manager prototype: tier limits, daily per-agent budgets, exact private-context cache, and usage ledger.
-- [x] Initial automated tests for world, memory, inference, runtime, messaging, and persistence.
+- [x] Initial automated tests for world, memory, inference, runtime, messaging, persistence, and relationship boundaries.
 - [x] Vision, architecture, roadmap, cost, and governance documents.
 - [x] First collaboration experiment protocol.
 
 ## Still to implement
 - [x] SQLite world snapshots, event history, and durable agent runtime cursors (schema v1; retention and migrations still pending).
-- [ ] Relationship model and social dynamics.
+- [x] Directional, world-scoped relationship profiles with append-only interaction history and bounded trust/familiarity scores (agent-facing permissions and automatic event integration remain pending).
 - [ ] Agent-facing knowledge permissions and explicit sharing workflow.
 - [ ] Independent evidence verification tools and scientific replication pipeline.
 - [ ] Provider/model routing, current rate-card management, concurrency-safe budget reservations, and monthly reporting.
