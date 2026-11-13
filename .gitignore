@@ -218,3 +218,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project Genesis local runtime data
+*.sqlite3
+*.sqlite3-journal
+*.db
+*.log
+.env.*
+!.env.example
+.genesis-cache/
+artifacts/
