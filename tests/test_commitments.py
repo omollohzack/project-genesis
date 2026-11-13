@@ -72,8 +72,7 @@ def test_declined_commitment_cannot_be_completed(tmp_path):
     store.respond(world, cid, "cato", accept=False)
     record_agent_event(world, "cato", "map.area_surveyed",
                        {"area": "north", "quality": "complete"})
-    with pytest.raises(CommitmentError):
-        store.reconcile(world, cid)
+    assert store.reconcile(world, cid)["status"] == "declined"
 
 
 def test_overdue_is_not_automatically_labelled_broken_promise(tmp_path):
