@@ -58,14 +58,17 @@ class AgentRuntime:
             raise WorldError(f"Unknown agent: {agent_id}")
         agent = world.agents[agent_id]
         last_id = self._last_seen_event.get(agent_id)
-        events = []
-        for event in world.events:
-            if last_id is None or event.event_id == last_id:
-                if last_id is not None:
-                    continue
-                events.append(event)
-            elif events or last_id is None:
-                events.append(event)
+        if last_id is None:
+            events = list(world.events[-20:])
+        else:
+            last_index = next(
+                (index for index, event in enumerate(world.events) if event.event_id == last_id),
+                None,
+            )
+            # If the cursor's event was pruned from a future bounded event log,
+            # expose no historical events rather than replaying an unknown range.
+            events = world.events[last_index + 1:] if last_index is not None else []
+            events = events[-20:]
         # Only expose public world events; private memories are never included.
         return AgentObservation(
             agent_id=agent_id,
