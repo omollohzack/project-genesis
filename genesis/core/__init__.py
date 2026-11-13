@@ -1,0 +1,1 @@
+"""Core world simulation primitives."""
