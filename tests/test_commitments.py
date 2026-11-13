@@ -14,7 +14,7 @@ def propose(world, store, **overrides):
         title="Map the northern area",
         description="Survey and record the northern area.",
         required_event_type="map.area_surveyed",
-        expected_payload={"area": "north", "quality": "complete"},
+        expected_payload={"area": "north", "quality": "complete", "commitment_id": cid},
         deadline_tick=world.tick + 5,
     )
     values.update(overrides)
@@ -45,7 +45,7 @@ def test_message_or_wrong_event_cannot_fulfil_commitment(tmp_path):
     cid = propose(world, store)
     store.respond(world, cid, "cato", accept=True)
     record_agent_event(world, "cato", "map.area_surveyed",
-                       {"area": "south", "quality": "complete"})
+                       {"area": "south", "quality": "complete", "commitment_id": cid})
     assert store.reconcile(world, cid)["status"] == "accepted"
 
 
