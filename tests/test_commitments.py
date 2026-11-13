@@ -14,7 +14,7 @@ def propose(world, store, **overrides):
         title="Map the northern area",
         description="Survey and record the northern area.",
         required_event_type="map.area_surveyed",
-        expected_payload={"area": "north", "quality": "complete", "commitment_id": cid},
+        expected_payload={"area": "north", "quality": "complete"},
         deadline_tick=world.tick + 5,
     )
     values.update(overrides)
@@ -98,3 +98,36 @@ def test_repeated_reconciliation_does_not_duplicate_trust(tmp_path):
     relation = RelationshipStore(tmp_path / "commitments.db").get_relationship(
         world.world_id, "ari", "cato")
     assert relation["interaction_count"] == 1
+
+
+def test_accepted_commitment_can_be_withdrawn_without_trust_penalty(tmp_path):
+    world, store = setup_store(tmp_path)
+    cid = propose(world, store)
+    store.respond(world, cid, "cato", accept=True)
+    result = store.withdraw(world, cid, "cato", reason="Capacity changed")
+    assert result["status"] == "withdrawn"
+    assert store.history(world.world_id, cid)[-1]["action"] == "withdrawn"
+    from genesis.social.relationships import RelationshipStore
+    relation = RelationshipStore(tmp_path / "commitments.db").get_relationship(
+        world.world_id, "ari", "cato")
+    assert relation is None
+
+
+def test_withdrawn_commitment_cannot_be_completed(tmp_path):
+    world, store = setup_store(tmp_path)
+    cid = propose(world, store)
+    store.respond(world, cid, "cato", accept=True)
+    store.withdraw(world, cid, "ari")
+    record_agent_event(world, "cato", "map.area_surveyed",
+                       {"area": "north", "quality": "complete"})
+    assert store.reconcile(world, cid)["status"] == "withdrawn"
+
+
+def test_only_participants_can_withdraw_and_only_before_resolution(tmp_path):
+    world, store = setup_store(tmp_path)
+    cid = propose(world, store)
+    with pytest.raises(WorldError):
+        store.withdraw(world, cid, "bela")
+    store.respond(world, cid, "cato", accept=False)
+    with pytest.raises(CommitmentError):
+        store.withdraw(world, cid, "cato")

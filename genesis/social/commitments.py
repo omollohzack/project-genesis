@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from genesis.core.models import World
 from genesis.core.world import WorldError
+from genesis.social.relationships import RelationshipStore
 
 
 class CommitmentError(ValueError):
@@ -36,7 +37,7 @@ class CommitmentStore:
                 accepted_tick INTEGER,
                 accepted_event_cursor INTEGER,
                 status TEXT NOT NULL CHECK(status IN
-                    ('offered', 'accepted', 'declined', 'completed', 'overdue')),
+                    ('offered', 'accepted', 'declined', 'completed', 'overdue', 'withdrawn')),
                 matched_event_id TEXT,
                 resolved_tick INTEGER
             )""")
@@ -54,6 +55,12 @@ class CommitmentStore:
                 tick INTEGER NOT NULL,
                 detail TEXT NOT NULL
             )""")
+        # reconcile() writes the derived relationship update into this shared
+        # database inside its own transaction, so the relationship schema must
+        # exist even when no RelationshipStore has been opened on the file yet.
+        # Opening the store here follows the composition pattern used by
+        # SocialInteractionEngine and keeps one source for that schema.
+        self._relationships = RelationshipStore(database)
 
     def _connect(self):
         db = sqlite3.connect(self.database, timeout=15)
@@ -148,14 +155,49 @@ class CommitmentStore:
                                   (commitment_id,)).fetchone()
             return dict(updated)
 
+    def withdraw(self, world: World, commitment_id: str, agent_id: str, *,
+                 reason: str = "") -> dict:
+        """Withdraw an offered or accepted commitment, without social penalty.
+
+        Either participant may withdraw. Withdrawal is a bookkeeping exit,
+        not a broken promise: it is recorded in the commitment history but
+        never changes relationship scores, matching the project's
+        non-retaliation principle for considered refusals.
+        """
+        if not isinstance(reason, str):
+            raise CommitmentError("reason must be a string")
+        if agent_id not in world.agents or world.agents[agent_id].status != "active":
+            raise WorldError("Only an active inhabitant can withdraw a commitment")
+        with self._connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT * FROM commitments WHERE commitment_id = ? AND world_id = ?",
+                             (commitment_id, world.world_id)).fetchone()
+            if row is None:
+                raise KeyError(commitment_id)
+            if agent_id not in (row["proposer_id"], row["assignee_id"]):
+                raise WorldError("Only a commitment participant can withdraw it")
+            if row["status"] not in ("offered", "accepted"):
+                raise CommitmentError(
+                    "Only an offered or accepted commitment can be withdrawn")
+            db.execute("UPDATE commitments SET status = 'withdrawn', resolved_tick = ? "
+                       "WHERE commitment_id = ?", (world.tick, commitment_id))
+            self._history(db, commitment_id, world.world_id, agent_id, "withdrawn",
+                          world.tick, reason.strip() or "Withdrawn by participant")
+            updated = db.execute("SELECT * FROM commitments WHERE commitment_id = ?",
+                                  (commitment_id,)).fetchone()
+            return dict(updated)
+
     @staticmethod
-    def _matches(event, commitment_id: str, required_event_type: str, expected_payload: dict) -> bool:
+    def _matches(event, required_event_type: str, expected_payload: dict) -> bool:
         if event.event_type != required_event_type or event.actor_id is None:
             return False
-        if event.payload.get("commitment_id") != commitment_id:
-            return False
+        # Feasibility and bookkeeping metadata in the expected payload
+        # (required capabilities/resources, the commitment's own ID) are not
+        # evidence: a completion event is matched on the observable fields
+        # only, so the event itself need not carry commitment metadata.
         evidence_fields = {key: value for key, value in expected_payload.items()
-                           if key not in {"required_capabilities", "required_resources"}}
+                           if key not in {"required_capabilities", "required_resources",
+                                          "commitment_id"}}
         return all(event.payload.get(key) == value for key, value in evidence_fields.items())
 
     def reconcile(self, world: World, commitment_id: str) -> dict:
@@ -170,7 +212,7 @@ class CommitmentStore:
                              (commitment_id, world.world_id)).fetchone()
             if row is None:
                 raise KeyError(commitment_id)
-            if row["status"] in ("completed", "declined", "overdue"):
+            if row["status"] in ("completed", "declined", "overdue", "withdrawn"):
                 return dict(row)
             if row["status"] != "accepted":
                 raise CommitmentError("Only accepted commitments can be reconciled")
@@ -181,7 +223,7 @@ class CommitmentStore:
                           if event.actor_id == row["assignee_id"]
                           and event.tick >= row["accepted_tick"]
                           and event.tick <= row["deadline_tick"]
-                          and self._matches(event, commitment_id, row["required_event_type"], expected)), None)
+                          and self._matches(event, row["required_event_type"], expected)), None)
             if match is not None:
                 db.execute("""UPDATE commitments SET status = 'completed',
                     matched_event_id = ?, resolved_tick = ? WHERE commitment_id = ?""",
@@ -232,7 +274,7 @@ class CommitmentStore:
         query = "SELECT * FROM commitments WHERE world_id = ? AND (proposer_id = ? OR assignee_id = ?)"
         params: list = [world_id, agent_id, agent_id]
         if statuses:
-            allowed = {"offered", "accepted", "declined", "completed", "overdue"}
+            allowed = {"offered", "accepted", "declined", "completed", "overdue", "withdrawn"}
             if not set(statuses).issubset(allowed):
                 raise CommitmentError("Unknown commitment status filter")
             query += " AND status IN (" + ",".join("?" for _ in statuses) + ")"
