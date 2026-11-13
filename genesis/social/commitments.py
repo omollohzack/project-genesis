@@ -149,8 +149,10 @@ class CommitmentStore:
             return dict(updated)
 
     @staticmethod
-    def _matches(event, required_event_type: str, expected_payload: dict) -> bool:
+    def _matches(event, commitment_id: str, required_event_type: str, expected_payload: dict) -> bool:
         if event.event_type != required_event_type or event.actor_id is None:
+            return False
+        if event.payload.get("commitment_id") != commitment_id:
             return False
         return all(event.payload.get(key) == value for key, value in expected_payload.items())
 
@@ -177,7 +179,7 @@ class CommitmentStore:
                           if event.actor_id == row["assignee_id"]
                           and event.tick >= row["accepted_tick"]
                           and event.tick <= row["deadline_tick"]
-                          and self._matches(event, row["required_event_type"], expected)), None)
+                          and self._matches(event, commitment_id, row["required_event_type"], expected)), None)
             if match is not None:
                 db.execute("""UPDATE commitments SET status = 'completed',
                     matched_event_id = ?, resolved_tick = ? WHERE commitment_id = ?""",
