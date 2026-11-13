@@ -59,3 +59,15 @@ class CommunicationStore:
                 (world_id, requesting_agent_id, limit)).fetchall()
         keys = ("message_id", "world_id", "sender_id", "recipient_id", "tick", "content", "created_at")
         return [dict(zip(keys, row)) for row in rows]
+
+    def get_message(self, world_id: str, message_id: str, requesting_agent_id: str) -> dict | None:
+        """Return a message only to one of its two participants."""
+        with self._connect() as db:
+            row = db.execute("""SELECT message_id, world_id, sender_id, recipient_id, tick, content, created_at
+                FROM messages WHERE world_id = ? AND message_id = ?
+                AND (sender_id = ? OR recipient_id = ?)""",
+                (world_id, message_id, requesting_agent_id, requesting_agent_id)).fetchone()
+        if row is None:
+            return None
+        keys = ("message_id", "world_id", "sender_id", "recipient_id", "tick", "content", "created_at")
+        return dict(zip(keys, row))
