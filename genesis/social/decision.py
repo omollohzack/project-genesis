@@ -130,6 +130,7 @@ class AgentDecisionEngine:
         if not isinstance(required_capabilities, list) or not isinstance(required_resources, dict):
             raise DecisionError("Commitment capability/resource requirements have invalid shapes")
 
+        profile_known = profile is not None
         if profile is None:
             reasons.append("No capability or resource profile is registered; feasibility is uncertain.")
             score -= 0.25
@@ -140,7 +141,9 @@ class AgentDecisionEngine:
             resources = profile["resources"]
             capacity = profile["max_active_commitments"]
 
-        missing = sorted(set(required_capabilities) - set(capabilities))
+        if any(not isinstance(item, str) or not item.strip() for item in required_capabilities):
+            raise DecisionError("required_capabilities must contain non-empty strings")
+        missing = sorted(set(required_capabilities) - set(capabilities)) if profile_known else []
         if missing:
             reasons.append("Missing capabilities: " + ", ".join(missing))
             score -= 0.65
@@ -148,10 +151,12 @@ class AgentDecisionEngine:
 
         insufficient = []
         for name, amount in required_resources.items():
+            if not isinstance(name, str) or not name.strip():
+                raise DecisionError("required resource names must be non-empty strings")
             available = resources.get(name, 0)
             if isinstance(amount, bool) or not isinstance(amount, (int, float)) or amount < 0:
                 raise DecisionError(f"Invalid required resource amount for {name}")
-            if available < amount:
+            if profile_known and available < amount:
                 insufficient.append(f"{name} ({available} available, {amount} required)")
         if insufficient:
             reasons.append("Insufficient resources: " + ", ".join(insufficient))
