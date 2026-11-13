@@ -75,4 +75,5 @@ Never commit API keys, passwords, personal data, or local databases. Keep creden
 - [Relationships and social dynamics](docs/RELATIONSHIPS_AND_SOCIAL_DYNAMICS.md)
 - [Social interaction engine](docs/SOCIAL_INTERACTION_ENGINE.md)
 - [Commitment and cooperation](docs/COMMITMENT_AND_COOPERATION.md)
+- [Agent decision and negotiation](docs/AGENT_DECISION_AND_NEGOTIATION.md)
 - [Implementation status](docs/IMPLEMENTATION_STATUS.md)
