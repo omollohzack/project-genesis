@@ -34,11 +34,15 @@ class CommitmentStore:
                 created_tick INTEGER NOT NULL,
                 deadline_tick INTEGER NOT NULL,
                 accepted_tick INTEGER,
+                accepted_event_cursor INTEGER,
                 status TEXT NOT NULL CHECK(status IN
                     ('offered', 'accepted', 'declined', 'completed', 'overdue')),
                 matched_event_id TEXT,
                 resolved_tick INTEGER
             )""")
+            columns = {row[1] for row in db.execute("PRAGMA table_info(commitments)")}
+            if "accepted_event_cursor" not in columns:
+                db.execute("ALTER TABLE commitments ADD COLUMN accepted_event_cursor INTEGER")
             db.execute("""CREATE INDEX IF NOT EXISTS idx_commitments_assignee
                 ON commitments(world_id, assignee_id, status, deadline_tick)""")
             db.execute("""CREATE TABLE IF NOT EXISTS commitment_history (
@@ -131,11 +135,13 @@ class CommitmentStore:
                            (world.tick, commitment_id))
                 self._history(db, commitment_id, world.world_id, None, "overdue",
                               world.tick, "Response deadline passed")
-                raise CommitmentError("The response deadline has passed")
+                return {"commitment_id": commitment_id, "status": "overdue"}
             status = "accepted" if accept else "declined"
             accepted_tick = world.tick if accept else None
-            db.execute("UPDATE commitments SET status = ?, accepted_tick = ?, resolved_tick = ? WHERE commitment_id = ?",
-                       (status, accepted_tick, None if accept else world.tick, commitment_id))
+            event_cursor = len(world.events) if accept else None
+            db.execute("""UPDATE commitments SET status = ?, accepted_tick = ?,
+                accepted_event_cursor = ?, resolved_tick = ? WHERE commitment_id = ?""",
+                       (status, accepted_tick, event_cursor, None if accept else world.tick, commitment_id))
             self._history(db, commitment_id, world.world_id, agent_id, status,
                           world.tick, "Assignee response")
             updated = db.execute("SELECT * FROM commitments WHERE commitment_id = ?",
@@ -166,7 +172,8 @@ class CommitmentStore:
                 raise CommitmentError("Only accepted commitments can be reconciled")
 
             expected = json.loads(row["expected_payload_json"])
-            match = next((event for event in world.events
+            accepted_cursor = row["accepted_event_cursor"] or 0
+            match = next((event for event in world.events[accepted_cursor:]
                           if event.actor_id == row["assignee_id"]
                           and event.tick >= row["accepted_tick"]
                           and event.tick <= row["deadline_tick"]
