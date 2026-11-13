@@ -134,7 +134,7 @@ class AgentDecisionEngine:
             reasons.append("No capability or resource profile is registered; feasibility is uncertain.")
             score -= 0.25
             recommendation = "negotiate"
-            capabilities, resources, capacity = [], {}, 0
+            capabilities, resources, capacity = [], {}, None
         else:
             capabilities = profile["capabilities"]
             resources = profile["resources"]
@@ -160,7 +160,7 @@ class AgentDecisionEngine:
 
         active = self.commitments.list_for_agent(
             world.world_id, agent_id, statuses=("accepted",))
-        if len(active) >= capacity:
+        if capacity is not None and len(active) >= capacity:
             reasons.append(f"Capacity reached: {len(active)} active commitments; limit is {capacity}.")
             score -= 0.5
             recommendation = "decline"
