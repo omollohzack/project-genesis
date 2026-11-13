@@ -251,6 +251,22 @@ class AgentDecisionEngine:
             if row[7] != "offered":
                 raise DecisionError("Counterproposal has already been resolved")
             status = "accepted" if accept else "rejected"
+            if accept:
+                commitment = db.execute("""SELECT status, deadline_tick FROM commitments
+                    WHERE world_id = ? AND commitment_id = ?""",
+                    (world.world_id, row[2])).fetchone()
+                if commitment is None or commitment[0] != "offered":
+                    raise DecisionError("The original commitment is no longer open for negotiation")
+                if row[5] <= commitment[1]:
+                    raise DecisionError("Counterproposal deadline must extend the current deadline")
+                db.execute("""UPDATE commitments SET deadline_tick = ?
+                    WHERE world_id = ? AND commitment_id = ?""",
+                    (row[5], world.world_id, row[2]))
+                db.execute("""INSERT INTO commitment_history
+                    (history_id, commitment_id, world_id, actor_id, action, tick, detail)
+                    VALUES (?, ?, ?, ?, 'terms_revised', ?, ?)""",
+                    (str(uuid4()), row[2], world.world_id, agent_id, world.tick,
+                     f"Deadline extended to tick {row[5]} by accepted counterproposal {counterproposal_id}"))
             db.execute("""UPDATE counterproposals SET status = ?, resolved_tick = ?
                 WHERE counterproposal_id = ?""",
                 (status, world.tick, counterproposal_id))
@@ -258,7 +274,7 @@ class AgentDecisionEngine:
                     "commitment_id": row[2], "status": status,
                     "revised_deadline_tick": row[5],
                     "rationale": row[6],
-                    "next_step": ("Create a revised commitment using the agreed terms."
+                    "next_step": ("The existing commitment now has the revised deadline."
                                   if accept else "The original offer remains unchanged.")}
 
     def counterproposal_history(self, world_id: str, commitment_id: str) -> list[dict]:
