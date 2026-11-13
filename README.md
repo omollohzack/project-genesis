@@ -73,4 +73,5 @@ Never commit API keys, passwords, personal data, or local databases. Keep creden
 - [Cognitive Resource Manager](docs/COGNITIVE_RESOURCE_MANAGER.md)
 - [Persistent universe](docs/PERSISTENT_UNIVERSE.md)
 - [Relationships and social dynamics](docs/RELATIONSHIPS_AND_SOCIAL_DYNAMICS.md)
+- [Social interaction engine](docs/SOCIAL_INTERACTION_ENGINE.md)
 - [Implementation status](docs/IMPLEMENTATION_STATUS.md)
