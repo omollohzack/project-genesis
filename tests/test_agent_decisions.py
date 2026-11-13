@@ -98,8 +98,8 @@ def test_counterproposal_requires_assignee_and_original_proposer_responds(tmp_pa
         engine.respond_to_counterproposal(world, counter_id, "bela", accept=True)
     result = engine.respond_to_counterproposal(world, counter_id, "ari", accept=True)
     assert result["status"] == "accepted"
-    assert "Create a revised commitment" in result["next_step"]
-    assert store.get(world.world_id, cid)["deadline_tick"] == world.tick + 8
+    assert "revised deadline" in result["next_step"]
+    assert store.get(world.world_id, cid)["deadline_tick"] == world.tick + 12
 
 
 def test_counterproposal_can_be_rejected_without_mutating_original(tmp_path):
