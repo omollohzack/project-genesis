@@ -48,16 +48,32 @@ class ReflectivePolicy:
 class AgentRuntime:
     ALLOWED_ACTIONS = {"wait", "reflect"}
 
-    def __init__(self, memory: SQLiteMemoryStore, policy: AgentPolicy | None = None):
+    def __init__(self, memory: SQLiteMemoryStore, policy: AgentPolicy | None = None,
+                 world_repository=None):
         self.memory = memory
         self.policy = policy or ReflectivePolicy()
-        self._last_seen_event: dict[str, str | None] = {}
+        self.world_repository = world_repository
+        self._last_seen_event: dict[tuple[str, str], str | None] = {}
+
+    def _get_cursor(self, world: World, agent_id: str) -> str | None:
+        key = (world.world_id, agent_id)
+        if key not in self._last_seen_event:
+            if self.world_repository is not None:
+                self._last_seen_event[key] = self.world_repository.get_agent_cursor(world.world_id, agent_id)
+            else:
+                self._last_seen_event[key] = None
+        return self._last_seen_event[key]
+
+    def _set_cursor(self, world: World, agent_id: str, event_id: str | None) -> None:
+        self._last_seen_event[(world.world_id, agent_id)] = event_id
+        if self.world_repository is not None:
+            self.world_repository.set_agent_cursor(world.world_id, agent_id, event_id)
 
     def observe(self, world: World, agent_id: str) -> AgentObservation:
         if agent_id not in world.agents:
             raise WorldError(f"Unknown agent: {agent_id}")
         agent = world.agents[agent_id]
-        last_id = self._last_seen_event.get(agent_id)
+        last_id = self._get_cursor(world, agent_id)
         if last_id is None:
             events = list(world.events[-20:])
         else:
@@ -95,7 +111,7 @@ class AgentRuntime:
                 raise WorldError("reflect action requires non-empty text")
             self.memory.add(agent_id, "episodic", text.strip(), "runtime_reflection")
             event = record_agent_event(world, agent_id, "agent.reflected", {"text": text.strip()})
-            self._last_seen_event[agent_id] = event.event_id
+            self._set_cursor(world, agent_id, event.event_id)
         elif observation.recent_events:
-            self._last_seen_event[agent_id] = observation.recent_events[-1]["event_id"]
+            self._set_cursor(world, agent_id, observation.recent_events[-1]["event_id"])
         return action

@@ -71,4 +71,5 @@ Never commit API keys, passwords, personal data, or local databases. Keep creden
 - [Alpha agent runtime](docs/ALPHA_AGENT_RUNTIME.md)
 - [Knowledge engine](docs/KNOWLEDGE_ENGINE.md)
 - [Cognitive Resource Manager](docs/COGNITIVE_RESOURCE_MANAGER.md)
+- [Persistent universe](docs/PERSISTENT_UNIVERSE.md)
 - [Implementation status](docs/IMPLEMENTATION_STATUS.md)
