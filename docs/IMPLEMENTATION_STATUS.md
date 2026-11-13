@@ -14,7 +14,7 @@ Last updated: 2026-11-13
 - [x] World-scoped knowledge ledger for claims, evidence, source independence, and review records.
 - [x] Conservative claim evaluation: proposed, corroborated, contested, or refuted.
 - [x] Cognitive Resource Manager prototype: tier limits, daily per-agent budgets, exact private-context cache, and usage ledger.
-- [x] Initial automated tests for world, memory, inference, runtime, messaging, persistence, relationship boundaries, message-linked social outcomes, and commitment lifecycle.
+- [x] Initial automated tests for world, memory, inference, runtime, messaging, persistence, relationship boundaries, message-linked social outcomes, commitment lifecycle, and agent decision/negotiation tests.
 - [x] Vision, architecture, roadmap, cost, and governance documents.
 - [x] First collaboration experiment protocol.
 
@@ -23,6 +23,7 @@ Last updated: 2026-11-13
 - [x] Directional, world-scoped relationship profiles with append-only interaction history and bounded trust/familiarity scores (agent-facing permissions and automatic event integration remain pending).
 - [x] Message-linked social outcomes with participant-only message lookup, directional relationship updates, and idempotent outcome recording (agent authentication and independently verified outcomes remain pending).
 - [x] Commitment and cooperation prototype: proposals, assignee acceptance/decline, event-cursor-based completion verification, overdue state, and evidence-linked relationship credit (authenticated agent principals and independent event verification remain pending).
+- [x] Explainable decision support for capabilities, resource snapshots, active workload, deadline pressure, and explicit deadline counterproposals (resource reservations and authenticated agent principals remain pending).
 - [ ] Agent-facing knowledge permissions and explicit sharing workflow.
 - [ ] Independent evidence verification tools and scientific replication pipeline.
 - [ ] Provider/model routing, current rate-card management, concurrency-safe budget reservations, and monthly reporting.
