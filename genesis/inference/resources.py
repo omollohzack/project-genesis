@@ -7,7 +7,6 @@ import json
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
-from time import perf_counter
 from uuid import uuid4
 
 from genesis.inference.base import InferenceRequest, InferenceResponse, InferenceProvider
@@ -72,7 +71,7 @@ class UsageLedger:
         return request_id
 
     def daily_totals(self, agent_id: str | None = None) -> tuple[int, float]:
-        query = "SELECT COUNT(*), COALESCE(SUM(estimated_cost_usd), 0) FROM inference_usage WHERE date(created_at) = date('now') AND status IN ('success', 'cache_hit')"
+        query = "SELECT COUNT(*), COALESCE(SUM(estimated_cost_usd), 0) FROM inference_usage WHERE date(created_at) = date('now')"
         params = ()
         if agent_id is not None:
             query += " AND agent_id = ?"
@@ -86,7 +85,7 @@ class UsageLedger:
             raise ValueError("limit must be positive")
         with self._connect() as db:
             db.row_factory = sqlite3.Row
-            rows = db.execute("SELECT * FROM inference_usage ORDER BY created_at DESC, request_id DESC LIMIT ?", (limit,)).fetchall()
+            rows = db.execute("SELECT * FROM inference_usage ORDER BY rowid DESC LIMIT ?", (limit,)).fetchall()
         return [dict(row) for row in rows]
 
 
@@ -192,7 +191,6 @@ class CognitiveResourceManager:
         if spent + worst_case > self.policy.daily_budget_usd:
             raise BudgetDenied("Agent daily inference budget would be exceeded")
 
-        started = perf_counter()
         try:
             response = provider.generate(request)
             if not isinstance(response, InferenceResponse):
@@ -201,17 +199,24 @@ class CognitiveResourceManager:
                 raise ValueError("Provider returned invalid token counts")
             if response.output_tokens > request.max_output_tokens:
                 raise ValueError("Provider exceeded the requested output-token limit")
-            cost = CostCalculator.calculate(response.input_tokens, response.output_tokens,
-                                             input_rate_per_million, output_rate_per_million)
-            if spent + cost > self.policy.daily_budget_usd:
-                raise BudgetDenied("Actual usage exceeded the remaining daily budget")
-            self.ledger.record(agent_id=request.agent_id, task=request.task, tier=request.tier,
-                provider=provider_name, model=model_name, input_tokens=response.input_tokens,
-                output_tokens=response.output_tokens, cost_usd=cost, status="success")
-            self.cache.put(key, response)
-            return response
         except Exception:
             self.ledger.record(agent_id=request.agent_id, task=request.task, tier=request.tier,
                 provider=provider_name, model=model_name, input_tokens=input_estimate,
                 output_tokens=0, cost_usd=0.0, status="failed")
             raise
+
+        cost = CostCalculator.calculate(response.input_tokens, response.output_tokens,
+                                         input_rate_per_million, output_rate_per_million)
+        if spent + cost > self.policy.daily_budget_usd:
+            # The provider call already happened; preserve its actual reported usage
+            # even though it crossed the local budget due to estimation differences.
+            self.ledger.record(agent_id=request.agent_id, task=request.task, tier=request.tier,
+                provider=provider_name, model=model_name, input_tokens=response.input_tokens,
+                output_tokens=response.output_tokens, cost_usd=cost, status="over_budget")
+            raise BudgetDenied("Actual usage exceeded the remaining daily budget; usage was recorded")
+
+        self.ledger.record(agent_id=request.agent_id, task=request.task, tier=request.tier,
+            provider=provider_name, model=model_name, input_tokens=response.input_tokens,
+            output_tokens=response.output_tokens, cost_usd=cost, status="success")
+        self.cache.put(key, response)
+        return response
