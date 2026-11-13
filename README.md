@@ -46,7 +46,7 @@ The initial runtime uses a deterministic stub inference provider. No API key or 
 
 ## Repository map
 
-- `genesis/` — simulation, agent, memory, and inference code
+- `genesis/` — simulation, agent, memory, social, and inference code
 - `docs/` — vision, architecture, governance, cost policy, and roadmap
 - `experiments/` — research protocols and experiment records
 - `tests/` — automated checks
@@ -68,4 +68,5 @@ Never commit API keys, passwords, personal data, or local databases. Keep creden
 - [Cost management](docs/COST_MANAGEMENT.md)
 - [Ethics and governance](docs/ETHICS_AND_GOVERNANCE.md)
 - [First experiment](experiments/GENESIS-EXP-001.md)
+- [Alpha agent runtime](docs/ALPHA_AGENT_RUNTIME.md)
 - [Implementation status](docs/IMPLEMENTATION_STATUS.md)
