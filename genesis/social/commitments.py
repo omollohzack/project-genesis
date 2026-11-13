@@ -154,7 +154,9 @@ class CommitmentStore:
             return False
         if event.payload.get("commitment_id") != commitment_id:
             return False
-        return all(event.payload.get(key) == value for key, value in expected_payload.items())
+        evidence_fields = {key: value for key, value in expected_payload.items()
+                           if key not in {"required_capabilities", "required_resources"}}
+        return all(event.payload.get(key) == value for key, value in evidence_fields.items())
 
     def reconcile(self, world: World, commitment_id: str) -> dict:
         """Match accepted work to assignee-authored world events.
