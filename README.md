@@ -70,4 +70,5 @@ Never commit API keys, passwords, personal data, or local databases. Keep creden
 - [First experiment](experiments/GENESIS-EXP-001.md)
 - [Alpha agent runtime](docs/ALPHA_AGENT_RUNTIME.md)
 - [Knowledge engine](docs/KNOWLEDGE_ENGINE.md)
+- [Cognitive Resource Manager](docs/COGNITIVE_RESOURCE_MANAGER.md)
 - [Implementation status](docs/IMPLEMENTATION_STATUS.md)

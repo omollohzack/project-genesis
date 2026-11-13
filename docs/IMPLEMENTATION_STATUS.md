@@ -13,6 +13,7 @@ Last updated: 2026-11-13
 - [x] SQLite direct messaging with sender/recipient-scoped retrieval.
 - [x] World-scoped knowledge ledger for claims, evidence, source independence, and review records.
 - [x] Conservative claim evaluation: proposed, corroborated, contested, or refuted.
+- [x] Cognitive Resource Manager prototype: tier limits, daily per-agent budgets, exact private-context cache, and usage ledger.
 - [x] Initial automated tests for world, memory, inference, runtime, and messaging.
 - [x] Vision, architecture, roadmap, cost, and governance documents.
 - [x] First collaboration experiment protocol.
@@ -22,7 +23,7 @@ Last updated: 2026-11-13
 - [ ] Relationship model and social dynamics.
 - [ ] Agent-facing knowledge permissions and explicit sharing workflow.
 - [ ] Independent evidence verification tools and scientific replication pipeline.
-- [ ] Inference router, token accounting, budgets, caching, and monthly reports.
+- [ ] Provider/model routing, current rate-card management, concurrency-safe budget reservations, and monthly reporting.
 - [ ] Experiment runner and reproducible scoring.
 - [ ] Human-facing API/UI.
 - [ ] Continuous integration workflow.
