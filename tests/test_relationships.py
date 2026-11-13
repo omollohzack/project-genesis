@@ -1,12 +1,12 @@
 import pytest
 
-from genesis.core.bootstrap import create_seeded_world
+from genesis.core.bootstrap import create_alpha_world
 from genesis.core.world import WorldError
 from genesis.social.relationships import RelationshipStore
 
 
 def make_world():
-    return create_seeded_world("social-test")
+    return create_alpha_world()
 
 
 def test_relationship_is_directional_and_persistent(tmp_path):
