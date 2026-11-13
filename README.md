@@ -1,5 +1,7 @@
 # Project Genesis
 
+[![CI](https://github.com/omollohzack/project-genesis/actions/workflows/ci.yml/badge.svg)](https://github.com/omollohzack/project-genesis/actions) ![Python 3.10-3.12](https://img.shields.io/badge/python-3.10--3.12-blue) ![License: MIT](https://img.shields.io/badge/license-MIT-green)
+
 **A persistent artificial world for studying autonomous agents, cooperation, and the emergence of shared knowledge.**
 
 Project Genesis explores a world inhabited by autonomous agents with durable identities, memories, relationships, and goals. Humans can observe and participate while the inhabitants continue to develop within the simulation.
