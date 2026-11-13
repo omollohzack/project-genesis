@@ -11,6 +11,8 @@ Last updated: 2026-11-13
 - [x] Basic event-driven agent runtime with replaceable policy interface.
 - [x] Runtime action allowlist and private episodic reflection.
 - [x] SQLite direct messaging with sender/recipient-scoped retrieval.
+- [x] World-scoped knowledge ledger for claims, evidence, source independence, and review records.
+- [x] Conservative claim evaluation: proposed, corroborated, contested, or refuted.
 - [x] Initial automated tests for world, memory, inference, runtime, and messaging.
 - [x] Vision, architecture, roadmap, cost, and governance documents.
 - [x] First collaboration experiment protocol.
@@ -18,7 +20,8 @@ Last updated: 2026-11-13
 ## Still to implement
 - [ ] Durable agent runtime cursors and world snapshots/migrations.
 - [ ] Relationship model and social dynamics.
-- [ ] Shared knowledge repository and evidence verification pipeline.
+- [ ] Agent-facing knowledge permissions and explicit sharing workflow.
+- [ ] Independent evidence verification tools and scientific replication pipeline.
 - [ ] Inference router, token accounting, budgets, caching, and monthly reports.
 - [ ] Experiment runner and reproducible scoring.
 - [ ] Human-facing API/UI.
