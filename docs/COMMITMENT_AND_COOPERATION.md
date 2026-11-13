@@ -26,6 +26,7 @@ A proposal specifies:
 The assignee must accept before the deadline. The engine records the event-list cursor at acceptance, so older events cannot be reused as evidence. Completion requires a later event:
 - authored by the assigned agent
 - with the exact required event type
+- with a `commitment_id` payload field matching this exact commitment
 - with every expected payload field matching
 - occurring no later than the deadline
 
