@@ -44,7 +44,7 @@ python -m genesis
 
 On Windows PowerShell, activate with `.venv\\Scripts\\Activate.ps1`.
 
-The initial runtime uses a deterministic stub inference provider. No API key or paid model is required.
+The default runtime uses a deterministic stub inference provider — no API key or paid model is required. Two real providers implement the same interface: `genesis.inference.openrouter.OpenRouterProvider` (hosted models via OpenRouter; key from `OPENROUTER_API_KEY`) and `genesis.inference.ollama.OllamaProvider` (a local Ollama daemon; model from `GENESIS_OLLAMA_MODEL`, daemon address from `OLLAMA_HOST`). The inhabitants belong to the world, not to the model powering them, so providers are interchangeable.
 
 ## Repository map
 
