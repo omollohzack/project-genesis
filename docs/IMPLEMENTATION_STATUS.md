@@ -33,4 +33,9 @@ Last updated: 2026-11-13
 - [ ] End-to-end validation of the complete Alpha system.
 
 ## Validation note
-The runtime policy included in this milestone is deterministic scaffolding, not an intelligent model. Tests have been authored but have not yet been executed in a local target environment. Do not treat this checklist as evidence that tests pass.
+
+The runtime policy included in this milestone is deterministic scaffolding, not an intelligent model.
+
+Validation updated 16 November 2026: the public CI workflow completed successfully on `main` ([CI run 43981673439](https://github.com/omollohzack/project-genesis/actions/runs/43981673439)). Current test status: **78 tests, 0 failures**.
+
+Use the linked CI run as execution evidence; this checklist alone is not evidence that tests pass.
